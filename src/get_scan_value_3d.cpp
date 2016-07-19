@@ -61,7 +61,6 @@ void cloud_cb (const sensor_msgs::PointCloud2Ptr& entered_cloud)
   
     std::cerr << "Cloud before filtering: " << std::endl;
     std::cerr << *cloud << std::endl;
-  
 /*****     PassThrough process      *****/
     pcl::PassThrough<pcl::PointXYZI> pass;
     pass.setInputCloud (cloud);
@@ -89,6 +88,8 @@ int main(int argc, char **argv)
     // Initiate new ROS node named "get_scan_value_3d"
     ros::init(argc, argv, "get_scan_value_3d");
     ros::NodeHandle n;
+
+	tf_listener = new tf::TransformListener();
 
     // Create a ROS subscriber for input PointCloud
     ros::Subscriber sub = n.subscribe("hokuyo3d/hokuyo_cloud2", 0, cloud_cb);
