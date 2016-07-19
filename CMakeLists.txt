@@ -6,6 +6,20 @@ project(road_surface_recognition)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  geometry_msgs
+  roscpp
+  rospy
+  std_msgs
+  pcl_ros
+  sensor_msgs
+  pcl_conversions
+  pcl_msgs
+  move_base_msgs
+  move_base
+  tf
+  cmake_modules
+
+
 )
 
 ## System dependencies are found with CMake's conventions
@@ -185,6 +199,8 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-add_executable(get_scan_value src/get_scan_value.cpp)
-target_link_libraries(get_scan_value ${catkin_LIBRARIES})
+add_executable(get_scan_value_2d src/get_scan_value_2d.cpp)
+add_executable(get_scan_value_3d src/get_scan_value_3d.cpp)
+target_link_libraries(get_scan_value_2d ${catkin_LIBRARIES})
+target_link_libraries(get_scan_value_3d ${catkin_LIBRARIES})
 
