@@ -200,7 +200,7 @@ include_directories(
 # catkin_add_nosetests(test)
 
 add_executable(get_scan_value_2d src/get_scan_value_2d.cpp)
-add_executable(get_scan_value_3d src/get_scan_value_3d.cpp)
+#add_executable(get_scan_value_3d src/get_scan_value_3d.cpp)
 target_link_libraries(get_scan_value_2d ${catkin_LIBRARIES})
-target_link_libraries(get_scan_value_3d ${catkin_LIBRARIES})
+#target_link_libraries(get_scan_value_3d ${catkin_LIBRARIES})
 
