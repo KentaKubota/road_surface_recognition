@@ -24,13 +24,18 @@ int main(int argc, char **argv)
 
 void get_scan_value(const sensor_msgs::LaserScan::ConstPtr& scan)
 {
-    const int sensor_pitch_degree 17;
-    int laser_num = scan->intensities.size();
+    const int sensor_pitch_degree = 17;
+    const double pi = 3.14159;
+    int    laser_sumNumber   = scan->ranges.size();
+    double range     = scan->ranges[laser_sumNumber/2];
+    double intensity = scan->intensities[laser_sumNumber/2];
+    double sensor_hight      = scan->ranges[laser_sumNumber/2] * sin(sensor_pitch_degree * pi /180);
+    double l_Robot2MesurLIne = scan->ranges[laser_sumNumber/2] * cos(sensor_pitch_degree * pi /180);
 
-    printf("laser sumNumber: %d  ", laser_num);
-    printf("intensity: %f  ",scan->intensities[laser_num/2]);
-    printf("range: %f  ",scan->ranges[laser_num/2]);
-    printf("sensor hight: %f  ",scan->ranges[laser_num/2] * sin(sensor_pitch_degree));
-    printf("distanceRobot2Line: %f\n",scan->ranges[laser_num/2] * cos(sensor_pitch_degree));
+    printf("laser_sumNumber: %d  ", laser_sumNumber);
+    printf("intensity: %f  ",intensity);
+    printf("range: %f  ",range);
+    printf("sensor_hight: %f  ", sensor_hight);
+    printf("l_Robot2MesurLIne: %f\n", l_Robot2MesurLIne);
 
 }
