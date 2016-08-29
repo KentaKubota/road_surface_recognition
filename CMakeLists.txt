@@ -18,8 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
   move_base
   tf
   cmake_modules
-
-
+  laser_geometry 
 )
 
 ## System dependencies are found with CMake's conventions
@@ -200,7 +199,12 @@ include_directories(
 # catkin_add_nosetests(test)
 
 add_executable(get_scan_value_2d src/get_scan_value_2d.cpp)
-#add_executable(get_scan_value_3d src/get_scan_value_3d.cpp)
 target_link_libraries(get_scan_value_2d ${catkin_LIBRARIES})
-#target_link_libraries(get_scan_value_3d ${catkin_LIBRARIES})
+
+add_executable(making_environmental_pointcloud src/making_environmental_pointcloud.cpp)
+target_link_libraries(making_environmental_pointcloud ${catkin_LIBRARIES})
+
+add_executable(making_environmental_pointcloud_new src/making_environmental_pointcloud_new.cpp)
+target_link_libraries(making_environmental_pointcloud_new ${catkin_LIBRARIES})
+
 
