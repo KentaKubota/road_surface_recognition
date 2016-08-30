@@ -7,6 +7,7 @@
 using namespace std;
 
 ros::Subscriber diag_scan_subscriber;
+ros::Publisher point_cloud_publisher_;
 
 laser_geometry::LaserProjection projector_;
 
@@ -22,6 +23,7 @@ int main(int argc, char **argv)
 
     ROS_INFO("     ************** Start reading scan value of 2DURG **************\n");
     diag_scan_subscriber = n.subscribe<sensor_msgs::LaserScan>("/diag_scan", 10, making_envir_coud);
+    point_cloud_publisher_ = n.advertise<sensor_msgs::PointCloud> ("/ccloud", 100, false);
 
     ros::spin();
     return 0;
@@ -32,5 +34,6 @@ void making_envir_coud(const sensor_msgs::LaserScan::ConstPtr& scan_in)
 {
   sensor_msgs::PointCloud cloud;
   projector_.projectLaser(*scan_in, cloud);
+  point_cloud_publisher_.publish(cloud);
 
 }
