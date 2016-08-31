@@ -2,8 +2,7 @@
 #include <sensor_msgs/LaserScan.h>
 // for transform LaserScan into pointcloud
 #include <tf/transform_listener.h>
-#include <laser_geometry/laser_geometry.h>
-
+#include <laser_geometry/laser_geometry.h> 
 using namespace std;
 
 ros::Subscriber diag_scan_subscriber;
