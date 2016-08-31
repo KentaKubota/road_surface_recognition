@@ -8,6 +8,7 @@ using namespace std;
 
 ros::Subscriber diag_scan_subscriber;
 ros::Publisher point_cloud_publisher_;
+//tf::TransformListener *listener_;
 tf::TransformListener listener_;
 laser_geometry::LaserProjection projector_;
 
@@ -44,6 +45,7 @@ void making_envir_cloud(const sensor_msgs::LaserScan::ConstPtr& scan_in)
 	tf::StampedTransform transform;
 	try{
 		listener_.waitForTransform(target_link_name, scan_in->header.frame_id, ros::Time(), ros::Duration(100.0));
+		//listener_->waitForTransform(target_link_name, scan_in->header.frame_id, ros::Time(), ros::Duration(100.0));
 	}catch(tf::TransformException ex){
 		ROS_ERROR("%s",ex.what());
 	}
