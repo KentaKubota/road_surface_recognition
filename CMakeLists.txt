@@ -207,4 +207,3 @@ target_link_libraries(making_environmental_pointcloud ${catkin_LIBRARIES})
 add_executable(making_environmental_pointcloud_new src/making_environmental_pointcloud_new.cpp)
 target_link_libraries(making_environmental_pointcloud_new ${catkin_LIBRARIES})
 
-
