@@ -42,7 +42,6 @@ Making_Envir_Cloud::Making_Envir_Cloud() // Constructor
 void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr& scan_in)
 {
     pcl::PointCloud<pcl::PointXYZI>::Ptr save_cloud(new pcl::PointCloud<pcl::PointXYZI>);
-    pcl::PointCloud<pcl::PointXYZI>::Ptr conv_cloud(new pcl::PointCloud<pcl::PointXYZI>);
 
     if(listener.waitForTransform(
                 scan_in->header.frame_id, 
@@ -65,26 +64,28 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
 
 	//Conversion PointCloud2 intensity field name to PointXYZI intensity field name.
 	cloud.fields[3].name = "intensity";
-	pcl::fromROSMsg(cloud, *conv_cloud);
-
-    //cout << save_cloud->points.size();
-    //cout << conv_cloud->points.size() << endl;
-    for (int i = 0; i < conv_cloud->points.size(); ++i)
-    {
-        cout << "i = " << i << endl;
-        save_cloud->points[save_cloud->points.size() + i].x = conv_cloud->points[i].x;
-        save_cloud->points[save_cloud->points.size() + i].y = conv_cloud->points[i].y;
-        save_cloud->points[save_cloud->points.size() + i].z = conv_cloud->points[i].z;
-        save_cloud->points[save_cloud->points.size() + i].intensity = conv_cloud->points[i].intensity;
-    }
+	pcl::fromROSMsg(cloud, *save_cloud);
 
 
-    //pcl::io::savePCDFileASCII ("making_envir_cloud.pcd", *save_cloud);
+    string file_path = "/home/kenta/pcd/";
+    string file_name_h = "making_envir_cloud_";
+    string file_name;
+    static int i = 0;
+    char buf[10];
+
+    sprintf(buf, "%d", i);
+    file_name.append(file_path);
+    file_name.append(file_name_h);
+    file_name.append(buf);
+    file_name.append(".pcd");
+    //cout << file_name << endl;
+
+    pcl::io::savePCDFileASCII (file_name, *save_cloud);
+    i++;
 
 
     point_cloud_pub.publish(cloud);
     cout << "Success in publishing " << endl;
-
 }
 
 
