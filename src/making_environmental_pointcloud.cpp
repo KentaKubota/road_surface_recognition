@@ -70,7 +70,7 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
     string file_path = "/home/kenta/pcd/";
     string file_name_h = "making_envir_cloud_";
     string file_name;
-    static int i = 0;
+    static int i = 1;
     char buf[10];
 
     sprintf(buf, "%d", i);
