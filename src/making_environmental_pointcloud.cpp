@@ -55,6 +55,7 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
         return;
     }
 
+
     try{
         projector.transformLaserScanToPointCloud("/map", *scan_in, cloud, listener);
     }catch(tf::TransformException e){
@@ -62,12 +63,24 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
 		return;
     }
 
-	//Conversion PointCloud2 intensity field name to PointXYZI intensity field name.
+	/* Conversion PointCloud2 intensity field name to PointXYZI intensity field name. */
 	cloud.fields[3].name = "intensity";
 	pcl::fromROSMsg(cloud, *save_cloud);
 
 
-    string file_path = "/home/kenta/pcd/";
+    /* Partition processing */
+    for(int i = 0; i < scan_in->ranges.size(); i++){
+        double normaliz = scan_in->intensities[i] / (-180 * scan_in->ranges[i] * scan_in->ranges[i] + 405.28 * scan_in->ranges[i] + 2282.94);
+
+        if(normaliz >= 1)
+			save_cloud->points[i].intensity = 1.0; 
+        else
+			save_cloud->points[i].intensity = 0.0; 
+    }
+
+
+    /* Saving processing */
+    string file_path = "/home/kenta/pcd/making_envir_cloud/";
     string file_name_h = "making_envir_cloud_";
     string file_name;
     static int i = 1;
