@@ -1,9 +1,9 @@
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
 #include <tf/transform_listener.h>
-// Setting to transform LaserScan into PointCloud
+/* Setting to transform LaserScan into PointCloud */
 #include <laser_geometry/laser_geometry.h>
-// Setting to PCL library
+/* Setting to PCL library */
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
 #include <pcl/io/pcd_io.h>
@@ -14,7 +14,8 @@ using namespace std;
 class Making_Envir_Cloud
 {
     public:
-        Making_Envir_Cloud(); // Constructor
+        /* Constructor */
+        Making_Envir_Cloud();
 
     private:
         ros::NodeHandle n;
@@ -32,7 +33,7 @@ class Making_Envir_Cloud
 };
 
 
-Making_Envir_Cloud::Making_Envir_Cloud() // Constructor
+Making_Envir_Cloud::Making_Envir_Cloud()
 {
     diag_scan_sub   = n.subscribe<sensor_msgs::LaserScan>("/diag_scan", 100, &Making_Envir_Cloud::diagScanCallback, this);
     point_cloud_pub = n.advertise<sensor_msgs::PointCloud2>("/cloud", 100, false);
@@ -43,6 +44,7 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
 {
     pcl::PointCloud<pcl::PointXYZI>::Ptr save_cloud(new pcl::PointCloud<pcl::PointXYZI>);
 
+	/* Transform diagonally_hokuyo_link frame to map frame */
     if(listener.waitForTransform(
                 scan_in->header.frame_id, 
                 "/map",
@@ -56,6 +58,7 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
     }
 
 
+	/* Transform LaserScan msg to PointCloud2 msg */
     try{
         projector.transformLaserScanToPointCloud("/map", *scan_in, cloud, listener);
     }catch(tf::TransformException e){
@@ -63,7 +66,7 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
 		return;
     }
 
-	/* Conversion PointCloud2 intensity field name to PointXYZI intensity field name. */
+	/* Conversion PointCloud2 intensity field name to PointXYZI intensity field name */
 	cloud.fields[3].name = "intensity";
 	pcl::fromROSMsg(cloud, *save_cloud);
 
@@ -73,9 +76,9 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
         double normaliz = scan_in->intensities[i] / (-180 * scan_in->ranges[i] * scan_in->ranges[i] + 405.28 * scan_in->ranges[i] + 2282.94);
 
         if(normaliz >= 1)
-			save_cloud->points[i].intensity = 1.0; 
+			save_cloud->points[i].intensity = 1.0;
         else
-			save_cloud->points[i].intensity = 0.0; 
+			save_cloud->points[i].intensity = 0.0;
     }
 
 
@@ -104,7 +107,7 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
 
 int main(int argc, char **argv)
 {
-    //Initiate new ROS node named "making_envir_cloud"
+    /* Initiate new ROS node named "making_envir_cloud" */
     ros::init(argc, argv, "making_envir_cloud");
 
     ROS_INFO("\n************** Start this program **************\n");
