@@ -44,7 +44,7 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
 {
     pcl::PointCloud<pcl::PointXYZI>::Ptr save_cloud(new pcl::PointCloud<pcl::PointXYZI>);
 
-	/* Transform diagonally_hokuyo_link frame to map frame */
+    /* Transform diagonally_hokuyo_link frame to map frame */
     if(listener.waitForTransform(
                 scan_in->header.frame_id, 
                 "/map",
@@ -53,22 +53,22 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
                 ros::Duration(0.01),
                 &error_msg ) == 0){
         cout <<"Failure in waitForTransform" << endl;
-		ROS_WARN("%s", error_msg.c_str());
+        ROS_WARN("%s", error_msg.c_str());
         return;
     }
 
 
-	/* Transform LaserScan msg to PointCloud2 msg */
+    /* Transform LaserScan msg to PointCloud2 msg */
     try{
         projector.transformLaserScanToPointCloud("/map", *scan_in, cloud, listener);
     }catch(tf::TransformException e){
-		ROS_WARN("Could not transform scan to pointcloud! (%s)", e.what());
-		return;
+        ROS_WARN("Could not transform scan to pointcloud! (%s)", e.what());
+        return;
     }
 
-	/* Conversion PointCloud2 intensity field name to PointXYZI intensity field name */
-	cloud.fields[3].name = "intensity";
-	pcl::fromROSMsg(cloud, *save_cloud);
+    /* Conversion PointCloud2 intensity field name to PointXYZI intensity field name */
+    cloud.fields[3].name = "intensity";
+    pcl::fromROSMsg(cloud, *save_cloud);
 
 
     /* Partition processing */
@@ -76,9 +76,9 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
         double normaliz = scan_in->intensities[i] / (-180 * scan_in->ranges[i] * scan_in->ranges[i] + 405.28 * scan_in->ranges[i] + 2282.94);
 
         if(normaliz >= 1)
-			save_cloud->points[i].intensity = 1.0;
+            save_cloud->points[i].intensity = 100.0;
         else
-			save_cloud->points[i].intensity = 0.0;
+            save_cloud->points[i].intensity = 0.0;
     }
 
 
