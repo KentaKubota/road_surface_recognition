@@ -78,7 +78,7 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
 
 
     /* Partition processing */
-    for(int i = 0; i < scan_in->ranges.size(); i++){
+    for(int i = 0; i < save_cloud->points.size(); i++){
         double normaliz = scan_in->intensities[i] / (-23.4136 * scan_in->ranges[i] * scan_in->ranges[i] - 143.118 * scan_in->ranges[i] + 2811.35);
 
         if(normaliz >= 1)
