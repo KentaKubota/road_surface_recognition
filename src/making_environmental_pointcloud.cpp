@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
 #include <tf/transform_listener.h>
+#include <sys/time.h>
 /* Setting to transform LaserScan into PointCloud */
 #include <laser_geometry/laser_geometry.h>
 /* Setting to PCL library */
@@ -42,7 +43,12 @@ Making_Envir_Cloud::Making_Envir_Cloud()
 
 void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr& scan_in)
 {
+    struct timeval s, e;
+    ros::Rate loop_rate(20); // 50ms
     pcl::PointCloud<pcl::PointXYZI>::Ptr save_cloud(new pcl::PointCloud<pcl::PointXYZI>);
+
+    gettimeofday(&s, NULL);
+
 
     /* Transform diagonally_hokuyo_link frame to map frame */
     if(listener.waitForTransform(
@@ -73,10 +79,10 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
 
     /* Partition processing */
     for(int i = 0; i < scan_in->ranges.size(); i++){
-        double normaliz = scan_in->intensities[i] / (-180 * scan_in->ranges[i] * scan_in->ranges[i] + 405.28 * scan_in->ranges[i] + 2282.94);
+        double normaliz = scan_in->intensities[i] / (-23.4136 * scan_in->ranges[i] * scan_in->ranges[i] - 143.118 * scan_in->ranges[i] + 2811.35);
 
         if(normaliz >= 1)
-            save_cloud->points[i].intensity = 100.0;
+            save_cloud->points[i].intensity = 1.0;
         else
             save_cloud->points[i].intensity = 0.0;
     }
@@ -101,7 +107,12 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
 
 
     point_cloud_pub.publish(cloud);
-    cout << "Success in publishing " << endl;
+    cout << "Success in publishing   ";
+
+    loop_rate.sleep();
+    gettimeofday(&e, NULL);
+    cout << "Compute time: " << (e.tv_sec - s.tv_sec) + (e.tv_usec - s.tv_usec)*1.0E-6 << "s" << endl;
+
 }
 
 
