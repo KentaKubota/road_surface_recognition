@@ -2,12 +2,14 @@
 #include <sensor_msgs/LaserScan.h>
 #include <tf/transform_listener.h>
 #include <sys/time.h>
-/* Setting to transform LaserScan into PointCloud */
+/* Setting for transform LaserScan into PointCloud */
 #include <laser_geometry/laser_geometry.h>
-/* Setting to PCL library */
+/* Setting for PCL library */
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
 #include <pcl/io/pcd_io.h>
+/* Setting for convertPointCloud2ToPointCloud */
+#include <sensor_msgs/point_cloud_conversion.h>
 
 using namespace std;
 
@@ -19,32 +21,34 @@ class Making_Envir_Cloud
         Making_Envir_Cloud();
 
     private:
-        ros::NodeHandle n;
+        ros::NodeHandle nh;
         ros::Subscriber diag_scan_sub;
-        ros::Publisher  point_cloud_pub;
+        ros::Publisher  diag_scan_20Hz_pub;
+        ros::Publisher  disting_cloud_pub;
 
         tf::TransformListener listener;
         std::string error_msg;
         laser_geometry::LaserProjection projector;
 
         sensor_msgs::PointCloud2 cloud;
+        sensor_msgs::PointCloud2 disting_cloud;
 
         void diagScanCallback(const sensor_msgs::LaserScan::ConstPtr& scan_in);
-
 };
 
 
 Making_Envir_Cloud::Making_Envir_Cloud()
 {
-    diag_scan_sub   = n.subscribe<sensor_msgs::LaserScan>("/diag_scan", 100, &Making_Envir_Cloud::diagScanCallback, this);
-    point_cloud_pub = n.advertise<sensor_msgs::PointCloud2>("/cloud", 100, false);
+    diag_scan_sub   = nh.subscribe<sensor_msgs::LaserScan>("/diag_scan", 100, &Making_Envir_Cloud::diagScanCallback, this);
+    disting_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/disting_cloud", 100, false);
+    diag_scan_20Hz_pub = nh.advertise<sensor_msgs::LaserScan>("/diag_scan_20Hz", 100, false);
 }
 
 
 void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr& scan_in)
 {
     struct timeval s, e;
-    ros::Rate loop_rate(20); // 50ms
+    ros::Rate loop_rate(20); // 20Hz = 50ms
     pcl::PointCloud<pcl::PointXYZI>::Ptr save_cloud(new pcl::PointCloud<pcl::PointXYZI>);
 
     gettimeofday(&s, NULL);
@@ -90,14 +94,12 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
 
     /* Saving processing */
     string file_path = "/home/kenta/pcd/making_envir_cloud/";
-    string file_name_h = "making_envir_cloud_";
     string file_name;
     static int i = 1;
     char buf[10];
 
     sprintf(buf, "%d", i);
     file_name.append(file_path);
-    file_name.append(file_name_h);
     file_name.append(buf);
     file_name.append(".pcd");
     //cout << file_name << endl;
@@ -106,7 +108,9 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
     i++;
 
 
-    point_cloud_pub.publish(cloud);
+    toROSMsg (*save_cloud, disting_cloud);
+    disting_cloud_pub.publish(disting_cloud);
+    diag_scan_20Hz_pub.publish(scan_in);
     cout << "Success in publishing   ";
 
     loop_rate.sleep();
