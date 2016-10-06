@@ -8,6 +8,7 @@
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
 #include <pcl/io/pcd_io.h>
+#include <pcl/filters/passthrough.h>
 /* Setting for convertPointCloud2ToPointCloud */
 #include <sensor_msgs/point_cloud_conversion.h>
 
@@ -30,8 +31,8 @@ class Making_Envir_Cloud
         std::string error_msg;
         laser_geometry::LaserProjection projector;
 
-        sensor_msgs::PointCloud2 cloud;
-        sensor_msgs::PointCloud2 disting_cloud;
+        sensor_msgs::PointCloud2 cloud2;
+        sensor_msgs::PointCloud2 disting_cloud2;
 
         void diagScanCallback(const sensor_msgs::LaserScan::ConstPtr& scan_in);
 };
@@ -40,7 +41,7 @@ class Making_Envir_Cloud
 Making_Envir_Cloud::Making_Envir_Cloud()
 {
     diag_scan_sub   = nh.subscribe<sensor_msgs::LaserScan>("/diag_scan", 100, &Making_Envir_Cloud::diagScanCallback, this);
-    disting_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/disting_cloud", 100, false);
+    disting_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/disting_cloud2", 100, false);
     diag_scan_20Hz_pub = nh.advertise<sensor_msgs::LaserScan>("/diag_scan_20Hz", 100, false);
 }
 
@@ -49,7 +50,8 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
 {
     struct timeval s, e;
     ros::Rate loop_rate(20); // 20Hz = 50ms
-    pcl::PointCloud<pcl::PointXYZI>::Ptr save_cloud(new pcl::PointCloud<pcl::PointXYZI>);
+    pcl::PointCloud<pcl::PointXYZI>::Ptr pcl_cloud (new pcl::PointCloud<pcl::PointXYZI>);
+    pcl::PointCloud<pcl::PointXYZI>::Ptr pcl_save_cloud (new pcl::PointCloud<pcl::PointXYZI>);
 
     gettimeofday(&s, NULL);
 
@@ -70,27 +72,35 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
 
     /* Transform LaserScan msg to PointCloud2 msg */
     try{
-        projector.transformLaserScanToPointCloud("/map", *scan_in, cloud, listener);
+        projector.transformLaserScanToPointCloud("/map", *scan_in, cloud2, listener);
     }catch(tf::TransformException e){
         ROS_WARN("Could not transform scan to pointcloud! (%s)", e.what());
         return;
     }
 
     /* Conversion PointCloud2 intensity field name to PointXYZI intensity field name */
-    cloud.fields[3].name = "intensity";
-    pcl::fromROSMsg(cloud, *save_cloud);
+    cloud2.fields[3].name = "intensity";
+    pcl::fromROSMsg(cloud2, *pcl_cloud);
 
 
     /* Partition processing */
-    for(int i = 0; i < save_cloud->points.size(); i++){
+    for(int i = 0; i < pcl_cloud->points.size(); i++){
         double normaliz = scan_in->intensities[i] / (-23.4136 * scan_in->ranges[i] * scan_in->ranges[i] - 143.118 * scan_in->ranges[i] + 2811.35);
 
         if(normaliz >= 1)
-            save_cloud->points[i].intensity = 1.0;
+            pcl_cloud->points[i].intensity = 1.0;
         else
-            save_cloud->points[i].intensity = 0.0;
+            pcl_cloud->points[i].intensity = 0.0;
     }
 
+
+    /* Removing cloud processing */
+    pcl::PassThrough<pcl::PointXYZI> pass;
+    pass.setInputCloud (pcl_cloud);
+    pass.setFilterFieldName ("intensity");
+    pass.setFilterLimits (1.0, 1.1); /* remove cloud between 0 and 0.1 intensity value */
+    pass.setFilterLimitsNegative (false);
+    pass.filter (*pcl_save_cloud);
 
     /* Saving processing */
     string file_path = "/home/kenta/pcd/making_envir_cloud/";
@@ -104,12 +114,12 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
     file_name.append(".pcd");
     //cout << file_name << endl;
 
-    pcl::io::savePCDFileASCII (file_name, *save_cloud);
+    //pcl::io::savePCDFileASCII (file_name, *pcl_save_cloud);
     i++;
 
 
-    toROSMsg (*save_cloud, disting_cloud);
-    disting_cloud_pub.publish(disting_cloud);
+    toROSMsg (*pcl_save_cloud, disting_cloud2);
+    disting_cloud_pub.publish(disting_cloud2);
     diag_scan_20Hz_pub.publish(scan_in);
     cout << "Success in publishing   ";
 
