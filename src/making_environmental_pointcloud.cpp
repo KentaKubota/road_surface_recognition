@@ -51,7 +51,6 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
     struct timeval s, e;
     ros::Rate loop_rate(20); // 20Hz = 50ms
     pcl::PointCloud<pcl::PointXYZI>::Ptr pcl_cloud (new pcl::PointCloud<pcl::PointXYZI>);
-    pcl::PointCloud<pcl::PointXYZI>::Ptr pcl_save_cloud (new pcl::PointCloud<pcl::PointXYZI>);
 
     gettimeofday(&s, NULL);
 
@@ -83,9 +82,9 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
     pcl::fromROSMsg(cloud2, *pcl_cloud);
 
 
-    /* Partition processing */
+    /* Distinguished cloud processing */
     for(int i = 0; i < pcl_cloud->points.size(); i++){
-        double normaliz = scan_in->intensities[i] / (-23.4136 * scan_in->ranges[i] * scan_in->ranges[i] - 143.118 * scan_in->ranges[i] + 2811.35);
+        double normaliz = scan_in->intensities[i] / (48.2143 * scan_in->ranges[i] * scan_in->ranges[i] - 840.393 * scan_in->ranges[i] + 4251.14+150);
 
         if(normaliz >= 1)
             pcl_cloud->points[i].intensity = 1.0;
@@ -93,15 +92,7 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
             pcl_cloud->points[i].intensity = 0.0;
     }
 
-
-    /* Removing cloud processing */
-    pcl::PassThrough<pcl::PointXYZI> pass;
-    pass.setInputCloud (pcl_cloud);
-    pass.setFilterFieldName ("intensity");
-    pass.setFilterLimits (1.0, 1.1); /* remove cloud between 0 and 0.1 intensity value */
-    pass.setFilterLimitsNegative (false);
-    pass.filter (*pcl_save_cloud);
-
+    
     /* Saving processing */
     string file_path = "/home/kenta/pcd/making_envir_cloud/";
     string file_name;
@@ -114,11 +105,11 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
     file_name.append(".pcd");
     //cout << file_name << endl;
 
-    //pcl::io::savePCDFileASCII (file_name, *pcl_save_cloud);
+    pcl::io::savePCDFileASCII (file_name, *pcl_cloud);
     i++;
 
 
-    toROSMsg (*pcl_save_cloud, disting_cloud2);
+    toROSMsg (*pcl_cloud, disting_cloud2);
     disting_cloud_pub.publish(disting_cloud2);
     diag_scan_20Hz_pub.publish(scan_in);
     cout << "Success in publishing   ";
