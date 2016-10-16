@@ -114,7 +114,7 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
     file_name.append(".pcd");
     //cout << file_name << endl;
 
-    //pcl::io::savePCDFileASCII (file_name, *pcl_save_cloud);
+    pcl::io::savePCDFileASCII (file_name, *pcl_save_cloud);
     i++;
 
 
