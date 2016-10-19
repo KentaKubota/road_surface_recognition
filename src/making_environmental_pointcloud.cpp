@@ -87,9 +87,9 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
         double normaliz = scan_in->intensities[i] / (48.2143 * scan_in->ranges[i] * scan_in->ranges[i] - 840.393 * scan_in->ranges[i] + 4251.14+150);
 
         if(normaliz >= 1)
-            pcl_cloud->points[i].intensity = 1.0;
+            pcl_cloud->points[i].intensity = 100.0;
         else
-            pcl_cloud->points[i].intensity = 0.0;
+            pcl_cloud->points[i].intensity = 0.1;
     }
 
     
