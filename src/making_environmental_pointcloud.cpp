@@ -116,8 +116,7 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
 
     loop_rate.sleep();
     gettimeofday(&e, NULL);
-    cout << "Compute time: " << (e.tv_sec - s.tv_sec) + (e.tv_usec - s.tv_usec)*1.0E-6 << "s" << endl;
-
+    cout << "Compute time: " <<  setw(9) << (e.tv_sec - s.tv_sec) + (e.tv_usec - s.tv_usec)*1.0E-6 << "s" << endl;
 }
 
 
