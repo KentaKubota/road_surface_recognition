@@ -49,7 +49,7 @@ Making_Envir_Cloud::Making_Envir_Cloud()
 void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr& scan_in)
 {
     struct timeval s, e;
-    ros::Rate loop_rate(20); // 20Hz = 50ms
+    ros::Rate loop_rate(10); // 20Hz = 50ms
     pcl::PointCloud<pcl::PointXYZI>::Ptr pcl_cloud (new pcl::PointCloud<pcl::PointXYZI>);
 
     gettimeofday(&s, NULL);
@@ -82,17 +82,44 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
     pcl::fromROSMsg(cloud2, *pcl_cloud);
 
 
+    /* Detect low level */
+    double a, b; //for rms error function
+    double sum_y, sum_x, sum_x2, sum_xy;
+    const int N = 100;
+    sum_y = sum_x = sum_x2 = sum_xy = 0;
+
+
     /* Distinguished cloud processing */
     for(int i = 0; i < pcl_cloud->points.size(); i++){
         double normaliz = scan_in->intensities[i] / (48.2143 * scan_in->ranges[i] * scan_in->ranges[i] - 840.393 * scan_in->ranges[i] + 4251.14+150);
 
         if(normaliz >= 1)
-            pcl_cloud->points[i].intensity = 100.0;
+            pcl_cloud->points[i].intensity = 0.1;
         else
             pcl_cloud->points[i].intensity = 0.1;
+
+        if(i >= 200 && i <= 299){
+            sum_x += pcl_cloud->points[i].y;
+            sum_y += pcl_cloud->points[i].z;
+            sum_xy += pcl_cloud->points[i].y * pcl_cloud->points[i].z;
+            sum_x2 += pcl_cloud->points[i].y * pcl_cloud->points[i].y;
+            //pcl_cloud->points[i].intensity = 50;  ////
+        }
     }
 
-    
+    a = (N * sum_xy - sum_x * sum_y) / (N * sum_x2 - pow(sum_x,2));
+    b = (sum_x2 * sum_y - sum_xy * sum_x) / (N * sum_x2 - pow(sum_x,2));
+    std::cout << "a = " << a << "b = " << b << std::endl;
+
+    /* Detect low level */
+    for(int i = 0; i < pcl_cloud->points.size(); i++){
+        if(pcl_cloud->points[i].z > a * pcl_cloud->points[i].y + b + 0.04)
+            pcl_cloud->points[i].intensity = 50;  ////
+    }
+
+
+
+
     /* Saving processing */
     string file_path = "/home/kenta/pcd/making_envir_cloud/";
     string file_name;
