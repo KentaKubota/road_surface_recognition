@@ -82,37 +82,34 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
     pcl::fromROSMsg(cloud2, *pcl_cloud);
 
 
-    /* Detect low level */
+    /* Variable for rms */
     double a, b; //for rms error function
-    double sum_y, sum_x, sum_x2, sum_xy;
+    double sum_z, sum_y, sum_y2, sum_yz;
     const int N = 100;
-    sum_y = sum_x = sum_x2 = sum_xy = 0;
+    sum_z = sum_y = sum_y2 = sum_yz = 0;
+
+    for(int i = 200; i <= 299 ; i++){
+        sum_y += pcl_cloud->points[i].y;
+        sum_z += pcl_cloud->points[i].z;
+        sum_yz += pcl_cloud->points[i].y * pcl_cloud->points[i].z;
+        sum_y2 += pcl_cloud->points[i].y * pcl_cloud->points[i].y;
+    }
+    a = (N * sum_yz - sum_y * sum_z) / (N * sum_y2 - pow(sum_y,2));
+    b = (sum_y2 * sum_z - sum_yz * sum_y) / (N * sum_y2 - pow(sum_y,2));
 
 
-    /* Distinguished cloud processing */
+    /* Detect low level processing and distinguished cloud processing */
     for(int i = 0; i < pcl_cloud->points.size(); i++){
         double normaliz = scan_in->intensities[i] / (48.2143 * scan_in->ranges[i] * scan_in->ranges[i] - 840.393 * scan_in->ranges[i] + 4251.14+250);
 
-        if(normaliz >= 1)
+        if(pcl_cloud->points[i].z >= a * pcl_cloud->points[i].y + b + 0.038){
             pcl_cloud->points[i].intensity = 100.0;
-        else
-            pcl_cloud->points[i].intensity = 0.1;
-
-        if(i >= 200 && i <= 299){
-            sum_x += pcl_cloud->points[i].y;
-            sum_y += pcl_cloud->points[i].z;
-            sum_xy += pcl_cloud->points[i].y * pcl_cloud->points[i].z;
-            sum_x2 += pcl_cloud->points[i].y * pcl_cloud->points[i].y;
+        }else{
+            if(normaliz >= 1)
+                pcl_cloud->points[i].intensity = 100.0;
+            else
+                pcl_cloud->points[i].intensity = 0.1;
         }
-    }
-
-    a = (N * sum_xy - sum_x * sum_y) / (N * sum_x2 - pow(sum_x,2));
-    b = (sum_x2 * sum_y - sum_xy * sum_x) / (N * sum_x2 - pow(sum_x,2));
-
-    /* Detect low level processing */
-    for(int i = 0; i < pcl_cloud->points.size(); i++){
-        if(pcl_cloud->points[i].z >= a * pcl_cloud->points[i].y + b + 0.038)
-            pcl_cloud->points[i].intensity = 100.0;
     }
 
 
@@ -126,7 +123,6 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
     file_name.append(file_path);
     file_name.append(buf);
     file_name.append(".pcd");
-    //cout << file_name << endl;
 
     pcl::io::savePCDFileASCII (file_name, *pcl_cloud);
     i++;
