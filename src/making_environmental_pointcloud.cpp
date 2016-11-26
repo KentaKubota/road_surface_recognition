@@ -12,8 +12,6 @@
 /* Setting for convertPointCloud2ToPointCloud */
 #include <sensor_msgs/point_cloud_conversion.h>
 
-using namespace std;
-
 
 class Making_Envir_Cloud
 {
@@ -63,7 +61,7 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
                 ros::Duration(1.0),
                 ros::Duration(0.01),
                 &error_msg ) == 0){
-        cout <<"Failure in waitForTransform" << endl;
+        std::cout <<"Failure in waitForTransform" << std::endl;
         ROS_WARN("%s", error_msg.c_str());
         return;
     }
@@ -116,8 +114,8 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
 
 
     /* Saving processing */
-    string file_path = "/home/kenta/pcd/making_envir_cloud/";
-    string file_name;
+    std::string file_path = "/home/kenta/pcd/making_envir_cloud/";
+    std::string file_name;
     static int i = 1;
     char buf[10];
 
@@ -133,11 +131,11 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
     toROSMsg (*pcl_cloud, disting_cloud2);
     disting_cloud_pub.publish(disting_cloud2);
     diag_scan_20Hz_pub.publish(scan_in);
-    cout << "Success in publishing   ";
+    std::cout << "Success in publishing   ";
 
     loop_rate.sleep();
     gettimeofday(&e, NULL);
-    cout << "Compute time: " <<  setw(9) << (e.tv_sec - s.tv_sec) + (e.tv_usec - s.tv_usec)*1.0E-6 << "s" << endl;
+    std::cout << "Compute time: " <<  std::setw(9) << (e.tv_sec - s.tv_sec) + (e.tv_usec - s.tv_usec)*1.0E-6 << "s" << std::endl;
 }
 
 
