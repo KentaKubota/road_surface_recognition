@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(road_surface_recognition)
 
+
+set(CMAKE_CXX_FLAGS "-march=native -O2 -std=c++11 -fopenmp")
+set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS   "-march=native -O2 -fopenmp")
+set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "-march=native -O2 -fopenmp")
+set(CMAKE_EXE_LINKER_FLAGS "-march=native -O2 -fopenmp")
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -20,6 +26,7 @@ find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   laser_geometry 
 )
+find_package(Boost REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -125,7 +132,8 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
-  ${catkin_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS} include
+  ${Boost_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -203,4 +211,7 @@ target_link_libraries(get_scan_value_2d ${catkin_LIBRARIES})
 
 add_executable(making_environmental_pointcloud src/making_environmental_pointcloud.cpp)
 target_link_libraries(making_environmental_pointcloud ${catkin_LIBRARIES})
+
+add_executable(reflection_intensity_mapping_node src/reflection_intensity_mapping_node.cpp src/map.c)
+target_link_libraries(reflection_intensity_mapping_node ${catkin_LIBRARIES})
 
