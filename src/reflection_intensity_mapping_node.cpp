@@ -118,7 +118,7 @@ bool ReflectionIntensityMappingNode::pubmapCallback(std_srvs::Empty::Request &re
     map_cloud.channels.push_back(channel);
 
     for(int i=0;i<map_->size_x;i++) {
-        ROS_INFO("Converting map data to pcd data");
+        ROS_INFO("Convert map data to pcd data");
 
         for(int j=0;j<map_->size_y;j++) {
             if (MAP_VALID(map_, i, j)) {
@@ -147,17 +147,22 @@ bool ReflectionIntensityMappingNode::pubmapCallback(std_srvs::Empty::Request &re
         }
     }
 
+    pcl::io::savePCDFileASCII ("/home/kenta/pcd/making_envir_cloud/test_raw.pcd", *pcl_cloud);
+    ROS_INFO("Saving a raw pcd file Succeeded\n");
+    ROS_INFO("Please wait because a raw pcd file is filtered now ...");
+
+    //Outlier filter
     pcl::StatisticalOutlierRemoval<pcl::PointXYZI> sor;
     sor.setInputCloud (pcl_cloud);
     sor.setMeanK (50);
-    sor.setStddevMulThresh (1.0);
+    sor.setStddevMulThresh (2.0);
     sor.filter (*cloud_filtered);
 
-    pcl::io::savePCDFileASCII ("/home/kenta/pcd/making_envir_cloud/test.pcd", *cloud_filtered);
-    ROS_INFO("Saving a pcd file Succeeded");
+    pcl::io::savePCDFileASCII ("/home/kenta/pcd/making_envir_cloud/test_filtered.pcd", *cloud_filtered);
+    ROS_INFO("Saving a filtered pcd file Succeeded");
 
     map_cloud_pub.publish(map_cloud);
-    ROS_INFO("Publishing a PointCloud data which topic name is map_cloud");
+    ROS_INFO("Published a PointCloud data of which topic name is map_cloud");
 
     for(int i=0; i<cloud_filtered->points.size(); i++){
         ROS_INFO("map_update_cell2");
@@ -175,7 +180,7 @@ map_t* ReflectionIntensityMappingNode::convertMap( const nav_msgs::OccupancyGrid
 
     map->size_x   = map_W  = map_msg.info.width;
     map->size_y   = map_H  = map_msg.info.height;
-    map->scale    = map_R  = map_msg.info.resolution*2;
+    map->scale    = map_R  = map_msg.info.resolution*1.5; //define scale
     map->origin_x = map_CX = map_msg.info.origin.position.x + (map->size_x / 2) * map->scale;
     map->origin_y = map_CY = map_msg.info.origin.position.y + (map->size_y / 2) * map->scale;
 
@@ -220,7 +225,7 @@ void ReflectionIntensityMappingNode::makingOccupancyGridMap()
     }
 
     occupancyGrid_pub.publish(lawn_occupancy);
-    ROS_INFO("Publishing a OccupancyGrid data which topic name is occupancyGrid");
+    ROS_INFO("Published an OccupancyGrid data of which topic name is occupancyGrid");
 
     return ;
 }

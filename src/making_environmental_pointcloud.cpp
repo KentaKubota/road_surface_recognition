@@ -95,8 +95,8 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
     a = (N * sum_yz - sum_y * sum_z) / (N * sum_y2 - pow(sum_y,2));
     b = (sum_y2 * sum_z - sum_yz * sum_y) / (N * sum_y2 - pow(sum_y,2));
 
-    if(a <= -0.025 || a >= 0.025)
-        return ;
+    //if(a <= -0.025 || a >= 0.025)
+    //    return ;
 
     /* Detect low level processing and distinguished cloud processing */
     for(int i = 0; i < pcl_cloud->points.size(); i++){

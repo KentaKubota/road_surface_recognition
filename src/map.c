@@ -44,9 +44,12 @@ void map_update_cell(map_t *map, double gx, double gy, double data)
         ((map->cells[MAP_INDEX(map,mi,mj)].average*(map->cells[MAP_INDEX(map,mi,mj)].visit-1))  + data)
         / map->cells[MAP_INDEX(map,mi,mj)].visit;
 
-    if(map->cells[MAP_INDEX(map,mi,mj)].average >= 50)
-        map->cells[MAP_INDEX(map,mi,mj)].average = 100;
-    else
+    //if(map->cells[MAP_INDEX(map,mi,mj)].average >= 50)
+    //    map->cells[MAP_INDEX(map,mi,mj)].average = 100;
+    //else
+    //    map->cells[MAP_INDEX(map,mi,mj)].average = 0.1;
+
+    if(map->cells[MAP_INDEX(map,mi,mj)].average != 100)
         map->cells[MAP_INDEX(map,mi,mj)].average = 0.1;
 }
 
