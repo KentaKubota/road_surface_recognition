@@ -81,26 +81,26 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
 
 
     /* Variable for rms */
-    double a, b; //for rms error function
-    double sum_z, sum_y, sum_y2, sum_yz;
-    const int N = 100;
-    sum_z = sum_y = sum_y2 = sum_yz = 0;
+    //double a, b; //for rms error function
+    //double sum_z, sum_y, sum_y2, sum_yz;
+    //const int N = 100;
+    //sum_z = sum_y = sum_y2 = sum_yz = 0;
 
-    for(int i = 200; i <= 299 ; i++){
-        sum_y += pcl_cloud->points[i].y;
-        sum_z += pcl_cloud->points[i].z;
-        sum_yz += pcl_cloud->points[i].y * pcl_cloud->points[i].z;
-        sum_y2 += pcl_cloud->points[i].y * pcl_cloud->points[i].y;
-    }
-    a = (N * sum_yz - sum_y * sum_z) / (N * sum_y2 - pow(sum_y,2));
-    b = (sum_y2 * sum_z - sum_yz * sum_y) / (N * sum_y2 - pow(sum_y,2));
+    //for(int i = 200; i <= 299 ; i++){
+    //    sum_y += pcl_cloud->points[i].y;
+    //    sum_z += pcl_cloud->points[i].z;
+    //    sum_yz += pcl_cloud->points[i].y * pcl_cloud->points[i].z;
+    //    sum_y2 += pcl_cloud->points[i].y * pcl_cloud->points[i].y;
+    //}
+    //a = (N * sum_yz - sum_y * sum_z) / (N * sum_y2 - pow(sum_y,2));
+    //b = (sum_y2 * sum_z - sum_yz * sum_y) / (N * sum_y2 - pow(sum_y,2));
 
     //if(a <= -0.025 || a >= 0.025)
     //    return ;
 
     /* Detect low level processing and distinguished cloud processing */
     for(int i = 0; i < pcl_cloud->points.size(); i++){
-        double normaliz = scan_in->intensities[i] / (48.2143 * scan_in->ranges[i] * scan_in->ranges[i] - 840.393 * scan_in->ranges[i] + 4251.14+300+300);
+        double normaliz = scan_in->intensities[i] / (48.2143 * scan_in->ranges[i] * scan_in->ranges[i] - 840.393 * scan_in->ranges[i] + 4251.14+300);
 
         //if(pcl_cloud->points[i].z >= a * pcl_cloud->points[i].y + b + 0.038){
         //    pcl_cloud->points[i].intensity = 100.0;

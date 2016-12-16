@@ -180,7 +180,7 @@ map_t* ReflectionIntensityMappingNode::convertMap( const nav_msgs::OccupancyGrid
 
     map->size_x   = map_W  = map_msg.info.width;
     map->size_y   = map_H  = map_msg.info.height;
-    map->scale    = map_R  = map_msg.info.resolution*2.0; //define scale
+    map->scale    = map_R  = map_msg.info.resolution*1.5; //define scale
     map->origin_x = map_CX = map_msg.info.origin.position.x + (map->size_x / 2) * map->scale;
     map->origin_y = map_CY = map_msg.info.origin.position.y + (map->size_y / 2) * map->scale;
 
