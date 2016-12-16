@@ -22,14 +22,13 @@ class Making_Envir_Cloud
     private:
         ros::NodeHandle nh;
         ros::Subscriber diag_scan_sub;
-        ros::Publisher  diag_scan_20Hz_pub;
         ros::Publisher  disting_cloud_pub;
 
         tf::TransformListener listener;
         std::string error_msg;
         laser_geometry::LaserProjection projector;
 
-        sensor_msgs::PointCloud2 cloud2;
+        sensor_msgs::PointCloud2 cloud_in;
         sensor_msgs::PointCloud2 disting_cloud2;
 
         void diagScanCallback(const sensor_msgs::LaserScan::ConstPtr& scan_in);
@@ -40,7 +39,6 @@ Making_Envir_Cloud::Making_Envir_Cloud()
 {
     diag_scan_sub   = nh.subscribe<sensor_msgs::LaserScan>("/diag_scan", 100, &Making_Envir_Cloud::diagScanCallback, this);
     disting_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/disting_cloud2", 100, false);
-    diag_scan_20Hz_pub = nh.advertise<sensor_msgs::LaserScan>("/diag_scan_20Hz", 100, false);
 }
 
 
@@ -48,7 +46,8 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
 {
     struct timeval s, e;
     ros::Rate loop_rate(10); // 10 = 100ms
-    pcl::PointCloud<pcl::PointXYZI>::Ptr pcl_cloud (new pcl::PointCloud<pcl::PointXYZI>);
+    pcl::PointCloud<pcl::PointXYZI>::Ptr raw_cloud (new pcl::PointCloud<pcl::PointXYZI>);
+    pcl::PointCloud<pcl::PointXYZI>::Ptr filtered_cloud (new pcl::PointCloud<pcl::PointXYZI>);
 
     gettimeofday(&s, NULL);
 
@@ -69,15 +68,43 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
 
     /* Transform LaserScan msg to PointCloud2 msg */
     try{
-        projector.transformLaserScanToPointCloud("/map", *scan_in, cloud2, listener);
+        projector.transformLaserScanToPointCloud("/map", *scan_in, cloud_in, listener);
     }catch(tf::TransformException e){
         ROS_WARN("Could not transform scan to pointcloud! (%s)", e.what());
         return;
     }
 
-    /* Conversion PointCloud2 intensity field name to PointXYZI intensity field name */
-    cloud2.fields[3].name = "intensity";
-    pcl::fromROSMsg(cloud2, *pcl_cloud);
+    /* Convert PointCloud2 field[3].name to PointXYZI intensity field name */
+    cloud_in.fields[3].name = "intensity";
+    pcl::fromROSMsg(cloud_in, *raw_cloud);
+
+    copyPointCloud(*raw_cloud, *filtered_cloud);
+
+
+    /* Saving LaserScan datan processing */
+    static int i = 1;
+    char buf[10];
+    std::string scan_file_path = "/home/kenta/pcd/making_envir_cloud/laserscan_data/";
+    std::string scan_file_name;
+
+    sprintf(buf, "%d", i);
+    scan_file_name.append(scan_file_path);
+    scan_file_name.append(buf);
+    scan_file_name.append(".txt");
+    std::ofstream ofs(scan_file_name.c_str(), std::ofstream::out);
+
+    for(int i = 0; i < scan_in->ranges.size(); i++)
+        ofs << scan_in->ranges[i] << "\t" << scan_in->intensities[i] << std::endl;
+    ofs.close();
+
+
+    /* Saving raw_cloud processing */
+    std::string raw_file_path = "/home/kenta/pcd/making_envir_cloud/raw_data/";
+    std::string raw_file_name;
+    raw_file_name.append(raw_file_path);
+    raw_file_name.append(buf);
+    raw_file_name.append(".pcd");
+    pcl::io::savePCDFileASCII (raw_file_name, *raw_cloud);
 
 
     /* Variable for rms */
@@ -87,10 +114,10 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
     //sum_z = sum_y = sum_y2 = sum_yz = 0;
 
     //for(int i = 200; i <= 299 ; i++){
-    //    sum_y += pcl_cloud->points[i].y;
-    //    sum_z += pcl_cloud->points[i].z;
-    //    sum_yz += pcl_cloud->points[i].y * pcl_cloud->points[i].z;
-    //    sum_y2 += pcl_cloud->points[i].y * pcl_cloud->points[i].y;
+    //    sum_y += raw_cloud->points[i].y;
+    //    sum_z += raw_cloud->points[i].z;
+    //    sum_yz += raw_cloud->points[i].y * raw_cloud->points[i].z;
+    //    sum_y2 += raw_cloud->points[i].y * raw_cloud->points[i].y;
     //}
     //a = (N * sum_yz - sum_y * sum_z) / (N * sum_y2 - pow(sum_y,2));
     //b = (sum_y2 * sum_z - sum_yz * sum_y) / (N * sum_y2 - pow(sum_y,2));
@@ -98,39 +125,34 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
     //if(a <= -0.025 || a >= 0.025)
     //    return ;
 
-    /* Detect low level processing and distinguished cloud processing */
-    for(int i = 0; i < pcl_cloud->points.size(); i++){
+
+    /* Detect low level processing and distinguish cloud processing */
+    for(int i = 0; i < filtered_cloud->points.size(); i++){
         double normaliz = scan_in->intensities[i] / (48.2143 * scan_in->ranges[i] * scan_in->ranges[i] - 840.393 * scan_in->ranges[i] + 4251.14+300);
 
-        //if(pcl_cloud->points[i].z >= a * pcl_cloud->points[i].y + b + 0.038){
-        //    pcl_cloud->points[i].intensity = 100.0;
+        //if(filtered_cloud->points[i].z >= a * filtered_cloud->points[i].y + b + 0.038){
+        //    filtered_cloud->points[i].intensity = 100.0;
         //}else{
             if(normaliz >= 1)
-                pcl_cloud->points[i].intensity = 100.0;
+                filtered_cloud->points[i].intensity = 100.0;
             else
-                pcl_cloud->points[i].intensity = 0.1;
+                filtered_cloud->points[i].intensity = 0.1;
         //}
     }
 
 
-    /* Saving processing */
-    std::string file_path = "/home/kenta/pcd/making_envir_cloud/";
-    std::string file_name;
-    static int i = 1;
-    char buf[10];
-
-    sprintf(buf, "%d", i);
-    file_name.append(file_path);
-    file_name.append(buf);
-    file_name.append(".pcd");
-
-    pcl::io::savePCDFileASCII (file_name, *pcl_cloud);
+    /* Saving filtered_cloud processing */
+    std::string filtered_file_path = "/home/kenta/pcd/making_envir_cloud/filtered_data/";
+    std::string filtered_file_name;
+    filtered_file_name.append(filtered_file_path);
+    filtered_file_name.append(buf);
+    filtered_file_name.append(".pcd");
+    pcl::io::savePCDFileASCII (filtered_file_name, *filtered_cloud);
     i++;
 
-
-    toROSMsg (*pcl_cloud, disting_cloud2);
+    /* Publish PointCloud2 which has distinguished clouds */
+    toROSMsg (*raw_cloud, disting_cloud2);
     disting_cloud_pub.publish(disting_cloud2);
-    diag_scan_20Hz_pub.publish(scan_in);
     std::cout << "Success in publishing   ";
 
     loop_rate.sleep();
