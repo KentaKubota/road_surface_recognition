@@ -151,7 +151,7 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
     i++;
 
     /* Publish PointCloud2 which has distinguished clouds */
-    toROSMsg (*raw_cloud, disting_cloud2);
+    toROSMsg (*filtered_cloud, disting_cloud2);
     disting_cloud_pub.publish(disting_cloud2);
     std::cout << "Success in publishing   ";
 
