@@ -128,7 +128,9 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
 
     /* Detect low level processing and distinguish cloud processing */
     for(int i = 0; i < filtered_cloud->points.size(); i++){
-        double normaliz = scan_in->intensities[i] / (48.2143 * scan_in->ranges[i] * scan_in->ranges[i] - 840.393 * scan_in->ranges[i] + 4251.14+300);
+        //double normaliz = scan_in->intensities[i] / (48.2143 * scan_in->ranges[i] * scan_in->ranges[i] - 840.393 * scan_in->ranges[i] + 4251.14+300);
+
+        double normaliz = scan_in->intensities[i] / (-430 * scan_in->ranges[i] + 3900);
 
         //if(filtered_cloud->points[i].z >= a * filtered_cloud->points[i].y + b + 0.038){
         //    filtered_cloud->points[i].intensity = 100.0;

@@ -45,10 +45,12 @@ class ReflectionIntensityMappingNode
         bool pubmapCallback(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response);
 
         /* Variable for map_update_cell2 */
-        int    *data;
+        int    *data1;
+        int    *data2;
         int    map_H, map_W;
         double map_R;
         double map_CX, map_CY;
+
 
     private:
         ros::Subscriber scan_sub;
@@ -91,19 +93,19 @@ void ReflectionIntensityMappingNode::pointcloudCallback(const sensor_msgs::Point
 
     ROS_INFO("Function in pointcloudCallback");
 
-    /* Conversion PointCloud2 intensity field name to PointXYZI intensity field name */
+    /* Convert PointCloud2 to pcl data */
     cp_in_cloud = *point_cloud2;
     cp_in_cloud.fields[3].name = "intensity";
     pcl::fromROSMsg(cp_in_cloud, *pcl_point_cloud);
 
-
+    /* Run end point update */
     for(int i=0; i<pcl_point_cloud->points.size(); i++){
         ROS_INFO("map_update_cell");
         map_update_cell(map_, pcl_point_cloud->points[i].x, pcl_point_cloud->points[i].y, pcl_point_cloud->points[i].intensity);
     }
 }
 
-
+/* When rosservice call /up map run, this function is called */
 bool ReflectionIntensityMappingNode::pubmapCallback(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
 {
     sensor_msgs::PointCloud map_cloud;
@@ -117,9 +119,9 @@ bool ReflectionIntensityMappingNode::pubmapCallback(std_srvs::Empty::Request &re
     channel.values.shrink_to_fit();
     map_cloud.channels.push_back(channel);
 
+    /* Make a grid pcl data */
     for(int i=0;i<map_->size_x;i++) {
         ROS_INFO("Convert map data to pcd data");
-
         for(int j=0;j<map_->size_y;j++) {
             if (MAP_VALID(map_, i, j)) {
                 if (map_->cells[MAP_INDEX(map_, i, j)].average > 0.0) {
@@ -151,10 +153,10 @@ bool ReflectionIntensityMappingNode::pubmapCallback(std_srvs::Empty::Request &re
     ROS_INFO("Saving a raw pcd file Succeeded\n");
     ROS_INFO("Please wait because a raw pcd file is filtered now ...");
 
-    //Outlier filter
+    /* Run an Outlier filter */
     pcl::StatisticalOutlierRemoval<pcl::PointXYZI> sor;
     sor.setInputCloud (pcl_cloud);
-    sor.setMeanK (50);
+    sor.setMeanK (100);
     sor.setStddevMulThresh (2.0);
     sor.filter (*cloud_filtered);
 
@@ -164,6 +166,7 @@ bool ReflectionIntensityMappingNode::pubmapCallback(std_srvs::Empty::Request &re
     map_cloud_pub.publish(map_cloud);
     ROS_INFO("Published a PointCloud data of which topic name is map_cloud");
 
+    /* Run end point update again because grid pcl data was filtered */
     for(int i=0; i<cloud_filtered->points.size(); i++){
         ROS_INFO("map_update_cell2");
         map_update_cell2(cloud_filtered->points[i].x, cloud_filtered->points[i].y, cloud_filtered->points[i].intensity);
@@ -180,12 +183,16 @@ map_t* ReflectionIntensityMappingNode::convertMap( const nav_msgs::OccupancyGrid
 
     map->size_x   = map_W  = map_msg.info.width;
     map->size_y   = map_H  = map_msg.info.height;
-    map->scale    = map_R  = map_msg.info.resolution*1.5; //define scale
+    map->scale    = map_R  = map_msg.info.resolution*1.0;
     map->origin_x = map_CX = map_msg.info.origin.position.x + (map->size_x / 2) * map->scale;
     map->origin_y = map_CY = map_msg.info.origin.position.y + (map->size_y / 2) * map->scale;
-
     map->cells = (map_cell_t*)malloc(sizeof(map_cell_t)*map->size_x*map->size_y);
-    data = new int[map_W*map_H];
+
+    data2 = new int[map_W*map_H];
+    data1 = new int[map_W*map_H];
+
+    for(int i = 0; i < map_msg.data.size(); i++)
+        data1[i] = map_msg.data[i];
 
     return map;
 }
@@ -204,6 +211,7 @@ void ReflectionIntensityMappingNode::requestMap()
         d.sleep();
     }
 
+    /* Import map_server data */
     map_ = convertMap(resp.map);
 }
 
@@ -220,8 +228,11 @@ void ReflectionIntensityMappingNode::makingOccupancyGridMap()
     lawn_occupancy.info.origin.position.y = map_CY - (map_H / 2) * map_R;
     lawn_occupancy.info.origin.position.z = 0.0;
 
+    /* Make OccupancyGrid map which has lawn data from grid pcl data */
     for(int i = 0; i < map_W*map_H; i++){
-        lawn_occupancy.data.push_back((int)data[i]);
+        lawn_occupancy.data.push_back((int)data1[i]);
+        if(lawn_occupancy.data[i] != 100 && (int)data2[i] == 100)
+            lawn_occupancy.data[i] = (int)data2[i];
     }
 
     occupancyGrid_pub.publish(lawn_occupancy);
@@ -239,7 +250,7 @@ void ReflectionIntensityMappingNode::map_update_cell2(double gx, double gy, doub
     int iy = (int)(y/map_R + map_H/2 + 0.5);
     int i = map_W * iy + ix;
 
-    data[abs(i)] = value;
+    data2[abs(i)] = value;
 
     return ;
 }
