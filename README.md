@@ -4,9 +4,9 @@ This ROS package provides the method making occupancy grid map that express lawn
 For example, if you use the map (Fig. 1), you can make the following map (Fig. 2). 
 
 ## Images
-![top-page](https://raw.githubusercontent.com/road_surface_recognition/images/map.png)
+![top-page](https://raw.githubusercontent.com/road_surface_recognition/images/map.pgm)
 
-![new-vm-page](https://raw.githubusercontent.com/road_surface_recognition/images/mapFileName.png)
+![new-vm-page](https://raw.githubusercontent.com/road_surface_recognition/images/lawnMap.pgm)
 
 
 ## Preparation
