@@ -139,7 +139,7 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
                 filtered_cloud->points[i].intensity = 100.0;
             }else{
               if(normaliz >= 1)
-                  filtered_cloud->points[i].intensity = 50.0;
+                  filtered_cloud->points[i].intensity = 100.0;
               else
                   filtered_cloud->points[i].intensity = 0.1;
             }

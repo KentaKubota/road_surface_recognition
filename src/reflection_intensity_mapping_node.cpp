@@ -98,14 +98,14 @@ void ReflectionIntensityMappingNode::pointcloudCallback(const sensor_msgs::Point
     cp_in_cloud.fields[3].name = "intensity";
     pcl::fromROSMsg(cp_in_cloud, *pcl_point_cloud);
 
-    /* Run end point update */
+    /* Run an endpoint update until you run 'rosservice call /up_map'. */
     for(int i=0; i<pcl_point_cloud->points.size(); i++){
         ROS_INFO("map_update_cell");
         map_update_cell(map_, pcl_point_cloud->points[i].x, pcl_point_cloud->points[i].y, pcl_point_cloud->points[i].intensity);
     }
 }
 
-/* When rosservice call /up map run, this function is called */
+/* When rosservice call /up_map run, this function is called. */
 bool ReflectionIntensityMappingNode::pubmapCallback(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
 {
     sensor_msgs::PointCloud map_cloud;
@@ -119,7 +119,7 @@ bool ReflectionIntensityMappingNode::pubmapCallback(std_srvs::Empty::Request &re
     channel.values.shrink_to_fit();
     map_cloud.channels.push_back(channel);
 
-    /* Make a grid pcl data */
+    /* Make a grid pcl data by converting occupancy grid map coordinate. */
     for(int i=0;i<map_->size_x;i++) {
         ROS_INFO("Convert map data to pcd data");
         for(int j=0;j<map_->size_y;j++) {
@@ -139,7 +139,8 @@ bool ReflectionIntensityMappingNode::pubmapCallback(std_srvs::Empty::Request &re
     map_cloud.header.stamp = ros::Time::now();
     convertPointCloudToPointCloud2(map_cloud, cloud2);
     pcl::fromROSMsg(cloud2, *pcl_cloud);
-
+    
+    // Delete except data being intensity 100.
     for(int i=0; i<pcl_cloud->points.size(); i++){
         if(pcl_cloud->points[i].intensity != 100){
             pcl_cloud->points[i].x = 0;
@@ -149,6 +150,7 @@ bool ReflectionIntensityMappingNode::pubmapCallback(std_srvs::Empty::Request &re
         }
     }
 
+    // Save raw point cloud data.
     pcl::io::savePCDFileASCII ("/home/kenta/pcd/making_envir_cloud/test_raw.pcd", *pcl_cloud);
     ROS_INFO("Saving a raw pcd file Succeeded\n");
     ROS_INFO("Please wait because a raw pcd file is filtered now ...");
@@ -160,6 +162,7 @@ bool ReflectionIntensityMappingNode::pubmapCallback(std_srvs::Empty::Request &re
     sor.setStddevMulThresh (2.0);
     sor.filter (*cloud_filtered);
 
+    // Save filtered point cloud data.
     pcl::io::savePCDFileASCII ("/home/kenta/pcd/making_envir_cloud/test_filtered.pcd", *cloud_filtered);
     ROS_INFO("Saving a filtered pcd file Succeeded");
 
@@ -228,20 +231,24 @@ void ReflectionIntensityMappingNode::makingOccupancyGridMap()
     lawn_occupancy.info.origin.position.y = map_CY - (map_H / 2) * map_R;
     lawn_occupancy.info.origin.position.z = 0.0;
 
-    /* Make OccupancyGrid map which has lawn data from grid pcl data */
+    /* Make occupancy grid map which has lawn data. 
+     * This map is made from grid pcl data and a published occupancy grid map from topic named map_server. */
     for(int i = 0; i < map_W*map_H; i++){
         lawn_occupancy.data.push_back((int)data1[i]);
         if(lawn_occupancy.data[i] != 100 && (int)data2[i] == 100)
             lawn_occupancy.data[i] = (int)data2[i];
     }
-
+    
+    // If you want to save occupancy grid map that has lawn place data regarded as occupation, 
+    // Please run a following command. 
+    // 'rosrun map_server map_saver -f mapfilename map:=lawnOccupancyGrid' 
     occupancyGrid_pub.publish(lawn_occupancy);
     ROS_INFO("Published an OccupancyGrid data of which topic name is occupancyGrid");
 
     return ;
 }
 
-
+// Endpoint update function 2.
 void ReflectionIntensityMappingNode::map_update_cell2(double gx, double gy, double value)
 {
     double x = gx - map_CX;
