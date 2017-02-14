@@ -8,7 +8,7 @@ For example, if you use the map (Fig. 1), you can make the following map (Fig. 2
 
 ![map](https://github.com/KentaKubota/road_surface_recognition/tree/master/images/map.png)
 
-![lawnMap](https://github.com/KentaKubota/road_surface_recognition/master/images/lawnMap.png)
+![lawnMap](https://github.com/KentaKubota/road_surface_recognition/tree/master/images/lawnMap.png)
 
 ## Preparation
 
