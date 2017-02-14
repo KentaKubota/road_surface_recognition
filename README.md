@@ -6,9 +6,9 @@ This ROS pkg provides the method making occupancy grid map that express lawn pla
 
 For example, if you use the map (Fig. 1), you can make the following map (Fig. 2). 
 
-<img src="https://github.com/KentaKubota/road_surface_recognition/blob/master/images/map.png" title="Fig. 1 map">
+<img src="https://github.com/KentaKubota/road_surface_recognition/blob/master/images/map.png" title="Fig.1 map" width="700px" alt="Fig.1 map">
 
-<img src="https://github.com/KentaKubota/road_surface_recognition/blob/master/images/lawnMap.png" >
+<img src="https://github.com/KentaKubota/road_surface_recognition/blob/master/images/lawnMap.png" title="Fig.2 lawnMap" width="700px" alt="Fig.2 lawnMap">
 
 ## Preparation
 
