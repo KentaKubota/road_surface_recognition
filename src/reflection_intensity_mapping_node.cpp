@@ -44,7 +44,7 @@ class ReflectionIntensityMappingNode
         map_t* convertMap(const nav_msgs::OccupancyGrid& map_msg );
         bool pubmapCallback(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response);
 
-        /* Variable for map_update_cell2 */
+        /* Variable for map_update_cell2 function. */
         int    *data1;
         int    *data2;
         int    map_H, map_W;
@@ -169,7 +169,7 @@ bool ReflectionIntensityMappingNode::pubmapCallback(std_srvs::Empty::Request &re
     map_cloud_pub.publish(map_cloud);
     ROS_INFO("Published a PointCloud data of which topic name is map_cloud");
 
-    /* Run end point update again because grid pcl data was filtered */
+    /* Run endpoint update again because grid pcl data was filtered */
     for(int i=0; i<cloud_filtered->points.size(); i++){
         ROS_INFO("map_update_cell2");
         map_update_cell2(cloud_filtered->points[i].x, cloud_filtered->points[i].y, cloud_filtered->points[i].intensity);
