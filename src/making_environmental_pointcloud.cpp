@@ -2,7 +2,7 @@
 #include <sensor_msgs/LaserScan.h>
 #include <tf/transform_listener.h>
 #include <sys/time.h>
-/* Setting for transform LaserScan into PointCloud */
+/* Setting for transforming LaserScan into PointCloud */
 #include <laser_geometry/laser_geometry.h>
 /* Setting for PCL library */
 #include <pcl_ros/point_cloud.h>
@@ -16,7 +16,6 @@
 class Making_Envir_Cloud
 {
     public:
-        /* Constructor */
         Making_Envir_Cloud();
 
     private:
@@ -81,7 +80,7 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
     copyPointCloud(*raw_cloud, *filtered_cloud);
 
 
-    /* Saving LaserScan datan processing */
+    /* Saving LaserScan data processing */
     static int i = 1;
     char buf[10];
     std::string scan_file_path = "/home/kenta/pcd/making_envir_cloud/laserscan_data/";
@@ -107,39 +106,49 @@ void Making_Envir_Cloud::diagScanCallback(const sensor_msgs::LaserScan::ConstPtr
     pcl::io::savePCDFileASCII (raw_file_name, *raw_cloud);
 
 
-    /* Variable for rms */
-    //double a, b; //for rms error function
-    //double sum_z, sum_y, sum_y2, sum_yz;
-    //const int N = 100;
-    //sum_z = sum_y = sum_y2 = sum_yz = 0;
+    /* If flag is true, detecting low level is on. Flag is initialized to false. */
+    double a, b; //for rms error function
+    int flag = false;
+    if(flag == true){
+        double sum_z, sum_y, sum_y2, sum_yz;
+        const int N = 100;
+        sum_z = sum_y = sum_y2 = sum_yz = 0;
 
-    //for(int i = 200; i <= 299 ; i++){
-    //    sum_y += raw_cloud->points[i].y;
-    //    sum_z += raw_cloud->points[i].z;
-    //    sum_yz += raw_cloud->points[i].y * raw_cloud->points[i].z;
-    //    sum_y2 += raw_cloud->points[i].y * raw_cloud->points[i].y;
-    //}
-    //a = (N * sum_yz - sum_y * sum_z) / (N * sum_y2 - pow(sum_y,2));
-    //b = (sum_y2 * sum_z - sum_yz * sum_y) / (N * sum_y2 - pow(sum_y,2));
+        // Calculate an inclination of measurement line from center laser values.
+        for(int i = 200; i <= 299 ; i++){
+            sum_y += raw_cloud->points[i].y;
+            sum_z += raw_cloud->points[i].z;
+            sum_yz += raw_cloud->points[i].y * raw_cloud->points[i].z;
+            sum_y2 += raw_cloud->points[i].y * raw_cloud->points[i].y;
+        }
+        a = (N * sum_yz - sum_y * sum_z) / (N * sum_y2 - pow(sum_y,2));
+        b = (sum_y2 * sum_z - sum_yz * sum_y) / (N * sum_y2 - pow(sum_y,2));
 
-    //if(a <= -0.025 || a >= 0.025)
-    //    return ;
-
+        // If Calculated inclination is over threshold value, process is stopped because got scan values include obstacle. 
+        if(a <= -0.025 || a >= 0.025)
+            return ;
+    }
 
     /* Detect low level processing and distinguish cloud processing */
     for(int i = 0; i < filtered_cloud->points.size(); i++){
-        //double normaliz = scan_in->intensities[i] / (48.2143 * scan_in->ranges[i] * scan_in->ranges[i] - 840.393 * scan_in->ranges[i] + 4251.14+300);
-
-        double normaliz = scan_in->intensities[i] / (-430 * scan_in->ranges[i] + 3900);
-
-        //if(filtered_cloud->points[i].z >= a * filtered_cloud->points[i].y + b + 0.038){
-        //    filtered_cloud->points[i].intensity = 100.0;
-        //}else{
+        double normaliz = scan_in->intensities[i] / (48.2143 * scan_in->ranges[i] * scan_in->ranges[i] - 840.393 * scan_in->ranges[i] + 4251.14+300+40);
+        //double normaliz = scan_in->intensities[i] / (-430 * scan_in->ranges[i] + 3900);
+        
+        if(flag == true){
+            if(filtered_cloud->points[i].z >= a * filtered_cloud->points[i].y + b + 0.038){
+                filtered_cloud->points[i].intensity = 100.0;
+            }else{
+              if(normaliz >= 1)
+                  filtered_cloud->points[i].intensity = 50.0;
+              else
+                  filtered_cloud->points[i].intensity = 0.1;
+            }
+        }else{
             if(normaliz >= 1)
                 filtered_cloud->points[i].intensity = 100.0;
             else
                 filtered_cloud->points[i].intensity = 0.1;
-        //}
+        }
     }
 
 
