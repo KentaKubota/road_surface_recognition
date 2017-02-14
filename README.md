@@ -1,17 +1,18 @@
 # road_surface_recognition pkg
 
 This ROS pkg provides the method making occupancy grid map that express lawn place data as occupancy.  
-For example, if you use the map (Fig. 1), you can make the following map (Fig. 2). 
 
 ## Images
-![map](https://raw.githubusercontent.com/road_surface_recognition/images/map.pgm)
 
-![lawnMap](https://raw.githubusercontent.com/road_surface_recognition/images/lawnMap.pgm)
+For example, if you use the map (Fig. 1), you can make the following map (Fig. 2). 
 
+![map](https://github.com/KentaKubota/road_surface_recognition/images/map.pgm)
+
+![lawnMap](https://github.com/KentaKubota/road_surface_recognition/images/lawnMap.pgm)
 
 ## Preparation
 
-Please install 'laser_geometry' pkg in your catkin_ws/src/ because this pkg uses laser_geometry pkg function.
+Please install `laser_geometry` pkg in your catkin_ws/src/ because this pkg uses laser_geometry pkg function.
 <https://github.com/ros-perception/laser_geometry.git>
 
 ## How to use
@@ -33,5 +34,5 @@ Please install 'laser_geometry' pkg in your catkin_ws/src/ because this pkg uses
  
     5. $ rosrun map_server map_saver -f mapFileName map:=lawnOccupancyGrid
  
-**you can get occupancy grid map named mapFileName on terminal having done command.**
+**you can get occupancy grid map named mapFileName on your terminal having done command.**
 
