@@ -28,11 +28,11 @@ Please install `laser_geometry` pkg in your catkin_ws/src/ because this pkg uses
 
     4. $ rosservice call /up_map 
 
-**if you can see following message on your terminal,**  
+**If you can see following message on your terminal,**  
 **`Published an OccupancyGrid data of which topic name is occupancyGrid,`**  
 **finally, run following command.**
  
     5. $ rosrun map_server map_saver -f mapFileName map:=lawnOccupancyGrid
  
-**you can get occupancy grid map named mapFileName on your terminal having done command.**
+**You can get occupancy grid map named mapFileName on your terminal having done command.**
 
